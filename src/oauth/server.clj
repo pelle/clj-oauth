@@ -55,15 +55,15 @@
   (fn [request]
     (let 
        [op (oauth-params request)
-       ;; _ (println op)
+        ;; _ (println op)
        ]
        (if (not (empty? op))
          (let 
            [oauth-consumer (store/get-consumer store (op :oauth_consumer_key))
             oauth-token (store/get-access-token store (op :oauth_token))]
             (if (sig/verify 
-                (sig/url-decode (op :oauth_signature))
-                (keyword (.toLowerCase (op :oauth_signature_method)))
+                (op :oauth_signature)
+                (keyword (.toLowerCase #^String (op :oauth_signature_method)))
                 oauth-consumer
                 (request-base-string request)
                 (and oauth-token (oauth-token :secret)))

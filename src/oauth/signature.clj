@@ -18,7 +18,7 @@
 (defn rand-str 
   "Random string for OAuth requests."
   [length]
-  (. (new BigInteger (* 5 length) secure-random) toString 32))
+  (. (new java.math.BigInteger (int (* 5 length)) #^java.security.SecureRandom secure-random) toString 32))
 
 (def signature-methods {:hmac-sha1 "HMAC-SHA1"
                         :plaintext "PLAINTEXT"})
@@ -53,7 +53,7 @@
 (defn verify [sig digest-method c base-string & [token-secret]]
   (do
     ;; TODO remove this before actualy release
-    (println sig (sign digest-method c base-string token-secret))  ; print out signature for debugging purposes
+    ;; (println sig (sign digest-method c base-string token-secret))  ; print out signature for debugging purposes
     (= sig (sign digest-method c base-string token-secret))))
 
 (defn url-encode

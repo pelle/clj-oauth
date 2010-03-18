@@ -165,7 +165,7 @@
       :scheme :https
       :headers { :authorize "OAuth realm=\"https://photos.example.net/\", oauth_consumer_key=\"dpf43f3p2l4k3l03\", oauth_signature_method=\"PLAINTEXT\", oauth_signature=\"kd94hf93k423kf44%26\", oauth_timestamp=\"1191242090\", oauth_nonce=\"hsu94j3884jdopsl\", oauth_callback=\"http://printer.example.com/request_token_ready\" oauth_version=\"1.0\""}})
       token-body (response :body)
-      _ (println token-body)
+;;       _ (println token-body)
       token-params (os/parse-form-encoded (response :body))]
       (is(= 200 (response :status)))
       (is (not (nil? token-body)))
