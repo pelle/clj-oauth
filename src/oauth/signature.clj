@@ -11,8 +11,8 @@
          base-string
          sign
          url-encode
-         oauth-params
-)
+         oauth-params)
+         
 (def secure-random (java.security.SecureRandom/getInstance "SHA1PRNG"))
 
 (defn rand-str 
@@ -25,16 +25,13 @@
 
 (defn url-form-encode [params]
   (str-join "&" (map (fn [[k v]]
-                      (str (url-encode (as-str k)) "=" (url-encode (as-str v)))) params ))
-  )
+                      (str (url-encode (as-str k)) "=" (url-encode (as-str v)))) params )))
 (defn base-string
   ([method base-url c t params]
     (base-string method base-url (assoc params :oauth_consumer_key (:key c)
                                                 :oauth_token (:token t)
                                                 :oauth_signature_method (or (params :oauth_signature_method) (signature-methods (:signature-method c)))
-                                                :oauth_version "1.0"
-                                              ))
-  )
+                                                :oauth_version "1.0")))
   ([method base-url params]
   (str-join "&" [method
                  (url-encode base-url) 
@@ -57,8 +54,7 @@
   (do
     ;; TODO remove this before actualy release
     (println sig (sign digest-method c base-string token-secret))  ; print out signature for debugging purposes
-    (= sig (sign digest-method c base-string token-secret)))
-)
+    (= sig (sign digest-method c base-string token-secret))))
 
 (defn url-encode
   "The java.net.URLEncoder class encodes for application/x-www-form-urlencoded, but OAuth

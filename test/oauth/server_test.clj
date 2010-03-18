@@ -19,8 +19,7 @@
     }))
   (is (= (os/parse-oauth-header "Basic realm=\"Secure Area\"") nil))
   (is (= (os/parse-oauth-header "") nil))
-  (is (= (os/parse-oauth-header nil) nil))
-)
+  (is (= (os/parse-oauth-header nil) nil)))
 
 (deftest
   #^{:doc "Test parsing of form encoded string."} 
@@ -29,8 +28,7 @@
   (is (= (os/parse-form-encoded "hello=") { :hello nil}))
   (is (= (os/parse-form-encoded "hello=this&fun=stuff") { :hello "this" :fun "stuff"}))
   (is (= (os/parse-form-encoded "") {}))
-  (is (= (os/parse-form-encoded nil) {}))
-)
+  (is (= (os/parse-form-encoded nil) {})))
 
 (deftest
   #^{:doc "Test extraction of oauth parameters."} 
@@ -45,17 +43,14 @@
       :oauth_signature "wOJIO9A2W5mFwDgiDvZbTSMK/PY="
       :oauth_timestamp "137131200"
       :oauth_nonce "4572616e48616d6d65724c61686176"
-      :oauth_version "1.0"
-    }))
-  )
+      :oauth_version "1.0"})))
   
 (deftest
   request-method
   (is (= "GET"    (os/request-method {:request-method :get})))
   (is (= "POST"   (os/request-method {:request-method :post})))
   (is (= "PUT"    (os/request-method {:request-method :put})))
-  (is (= "DELETE" (os/request-method {:request-method :delete})))
-  )
+  (is (= "DELETE" (os/request-method {:request-method :delete}))))
 
 (deftest
   request-uri
@@ -77,8 +72,7 @@
       :params {:file "vacation.jpg" :size "original"}
       :headers { :authorize "OAuth realm=\"http://sp.example.com/\", oauth_consumer_key=\"0685bd9184jfhq22\", oauth_token=\"ad180jjd733klru7\", oauth_signature_method=\"HMAC-SHA1\", oauth_signature=\"wOJIO9A2W5mFwDgiDvZbTSMK%2FPY%3D\", oauth_timestamp=\"137131200\", oauth_nonce=\"4572616e48616d6d65724c61686176\",oauth_version=\"1.0\""}}
     )
-    "GET&http%3A%2F%2Fphotos.example.net%2Fphotos&file%3Dvacation.jpg%26oauth_consumer_key%3D0685bd9184jfhq22%26oauth_nonce%3D4572616e48616d6d65724c61686176%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D137131200%26oauth_token%3Dad180jjd733klru7%26oauth_version%3D1.0%26size%3Doriginal"
-  )))
+    "GET&http%3A%2F%2Fphotos.example.net%2Fphotos&file%3Dvacation.jpg%26oauth_consumer_key%3D0685bd9184jfhq22%26oauth_nonce%3D4572616e48616d6d65724c61686176%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D137131200%26oauth_token%3Dad180jjd733klru7%26oauth_version%3D1.0%26size%3Doriginal")))
   
 (defn app [req]
   (if (or (req :oauth-token)(req :oauth-consumer))
@@ -90,8 +84,7 @@
     {
       :status 401
       :headers {}
-      :body ""
-    }))
+      :body "" }))
 
 
 (deftest
@@ -129,9 +122,7 @@
       :uri "/photos"
       :scheme :http
       :params {:file "vacation.jpg" :size "original"}
-      :headers { :authorize "OAuth realm=\"http://sp.example.com/\", oauth_consumer_key=\"dpf43f3p2l4k3l03\", oauth_signature_method=\"PLAINTEXT\", oauth_signature=\"kd94hf93k423kf44%26\", oauth_timestamp=\"1191242096\", oauth_nonce=\"kllo9940pd9333jh\",oauth_version=\"1.0\""}}) :status)))
-      
-  ))
+      :headers { :authorize "OAuth realm=\"http://sp.example.com/\", oauth_consumer_key=\"dpf43f3p2l4k3l03\", oauth_signature_method=\"PLAINTEXT\", oauth_signature=\"kd94hf93k423kf44%26\", oauth_timestamp=\"1191242096\", oauth_nonce=\"kllo9940pd9333jh\",oauth_version=\"1.0\""}}) :status )))))
   
 (deftest
   #^{:doc "token request"}
@@ -155,10 +146,7 @@
         (is (= (token :token) (token-params :oauth_token)))
         (is (= (token :secret) (token-params :oauth_secret)))
         (is (= (token :consumer) consumer))
-        (is (not (nil? (token :verifier))))
-        )
-    ))
-  )
+        (is (not (nil? (token :verifier))))))))
   
 ;; 
 (deftest
@@ -191,18 +179,14 @@
         (is (= (token :token) (token-params :oauth_token)))
         (is (= (token :secret) (token-params :oauth_secret)))
         (is (= (token :consumer) (store/get-consumer :memory "dpf43f3p2l4k3l03")))
-        (is (not (nil? (token :verifier))))
-        ))
-      
-  ))
+        (is (not (nil? (token :verifier))))))))
   
 
 (deftest
   #^{:doc "access token request"}
   access-token
   (let [consumer (store/create-consumer :memory)
-        request-token (store/create-request-token :memory consumer "http://test.com/callback")
-      ]
+        request-token (store/create-request-token :memory consumer "http://test.com/callback")]
     (is (= 401 ((os/access-token :memory {} ) :status)))
     (is (= 401 ((os/access-token :memory { :oauth-consumer consumer }) :status)))
     (is (= 401 ((os/access-token :memory { :oauth-consumer consumer :oauth-token request-token :oauth-params {:oauth_verifier (request-token :verifier)}}) :status)))
@@ -223,10 +207,5 @@
             (is (not (nil? token)))
             (is (= (token :token) (token-params :oauth_token)))
             (is (= (token :secret) (token-params :oauth_secret)))
-            (is (= (token :consumer) consumer))
-            )    
-        ))
-        
-        )
-  ))
+            (is (= (token :consumer) consumer))))))))
   

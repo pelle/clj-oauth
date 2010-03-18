@@ -7,8 +7,7 @@
             [oauth.token-store :as store])
   (:use [clojure.contrib.str-utils :only [str-join re-split]]
         [clojure.contrib.str-utils2 :only [upper-case]]
-        [clojure.contrib.java-utils :only [as-str]])
-)
+        [clojure.contrib.java-utils :only [as-str]]))
 
 
 (defn parse-oauth-header 
@@ -19,9 +18,7 @@
     nil
     (reduce (fn [v c] (conj c v)) {}  ; I know there has to be a simpler way of doing this
       (map (fn [x] {(keyword ( x 1)) (sig/url-decode (x 2))}) 
-        (re-seq #"(oauth_[^=, ]+)=\"([^\"]*)\"" auth)))
-      )
-)
+        (re-seq #"(oauth_[^=, ]+)=\"([^\"]*)\"" auth)))))
 
 (defn parse-form-encoded [string]
   (if (or (nil? string)
@@ -30,12 +27,10 @@
    (reduce 
      (fn [h v] (assoc h (keyword (first v)) (second v))) 
      {} 
-     (vec (map #(re-split #"=" %) (re-split #"&" string))))
-  ))
+     (vec (map #(re-split #"=" %) (re-split #"&" string))))))
   
 (defn oauth-params [request]
-  (parse-oauth-header ((or (request :headers) {}) :authorize))
-)
+  (parse-oauth-header ((or (request :headers) {}) :authorize)))
 
 (defn request-method [request] (upper-case (as-str (request :request-method))))
 
@@ -43,14 +38,12 @@
   (str (or (as-str (request :scheme)) "http") "://" (request :server-name) (request :uri)))
 
 (defn request-parameters [request]
-  (merge (dissoc (oauth-params request) :oauth_signature) (request :params))
-  )
+  (merge (dissoc (oauth-params request) :oauth_signature) (request :params)))
   
 (defn request-base-string
   "creates a signature base string from a ring request"
   [request]
-  (sig/base-string (request-method request) (request-uri request) (request-parameters request))
-)
+  (sig/base-string (request-method request) (request-uri request) (request-parameters request)))
 
 (defn wrap-oauth
   "Middleware to handle OAuth authentication of requests. If the request is oauth authenticated it adds the following to the request:
@@ -76,20 +69,15 @@
                 (and oauth-token (oauth-token :secret)))
                 (if (nil? oauth-token)
                   (handler (assoc request :oauth-consumer oauth-consumer :oauth-params op)) 
-                  (handler (assoc request :oauth-consumer oauth-consumer :oauth-token oauth-token :oauth-params op)) 
-                )
-                (handler request)
-              )
-         )
+                  (handler (assoc request :oauth-consumer oauth-consumer :oauth-token oauth-token :oauth-params op)))
+                (handler request)))
         (handler request)
-       ))
-      ))
+       ))))
 
 (defn- token-response [token]
   { :status 200
     :header {}
-    :body (sig/url-form-encode token)}
-  )
+    :body (sig/url-form-encode token)})
 
 (defn not-allowed []
   { :status 401
@@ -104,10 +92,8 @@
         (contains? request :oauth-params)
         (not (nil? ((request :oauth-params) :oauth_callback))))
     (let [token (store/create-request-token store (request :oauth-consumer) ((request :oauth-params) :oauth_callback))]
-      (token-response {:oauth_token (token :token) :oauth_secret (token :secret) :oauth_callback_confirmed "true"})      
-      )
-    (not-allowed)
-  ))
+      (token-response {:oauth_token (token :token) :oauth_secret (token :secret) :oauth_callback_confirmed "true"}))
+    (not-allowed)))
   
 (defn access-token
   [store request]
@@ -123,8 +109,7 @@
     (let [token (store/create-access-token store (request :oauth-consumer) )]
       (token-response {:oauth_token (token :token) :oauth_secret (token :secret)})      
       )
-    (not-allowed)
-  ))
+    (not-allowed)))
   
 (defn oauth-token-manager
   "App to manage OAuth token requests. Expects wrap-oauth to be applied already. 
@@ -140,5 +125,4 @@
           (request-token store request)
         "/oauth/access_token"
           (access-token store request)
-        (handler request)))
-  )
+        (handler request))))
