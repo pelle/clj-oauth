@@ -45,22 +45,22 @@
   [request]
   (sig/base-string (request-method request) (request-uri request) (request-parameters request)))
 
-(defn wrap-oauth
+(defn oauth-filter
   "Middleware to handle OAuth authentication of requests. If the request is oauth authenticated it adds the following to the request:
     :oauth-token - The oauth token used
     :oauth-consumer - The consumer key used
   Takes a function which will be used to find a token. This accepts the consumer and token parameters
   and should return the responding consumer secret and token secret."
-  [handler store]
+  ([handler store] (oauth-filter handler store store/get-access-token))
+  ([handler store get-token]
   (fn [request]
     (let 
        [op (oauth-params request)
-        ;; _ (println op)
        ]
        (if (not (empty? op))
          (let 
            [oauth-consumer (store/get-consumer store (op :oauth_consumer_key))
-            oauth-token (store/get-access-token store (op :oauth_token))]
+            oauth-token (get-token store (op :oauth_token))]
             (if (sig/verify 
                 (op :oauth_signature)
                 (keyword (.toLowerCase #^String (op :oauth_signature_method)))
@@ -72,7 +72,7 @@
                   (handler (assoc request :oauth-consumer oauth-consumer :oauth-token oauth-token :oauth-params op)))
                 (handler request)))
         (handler request)
-       ))))
+       )))))
 
 (defn- token-response [token]
   { :status 200
@@ -111,13 +111,7 @@
       )
     (not-allowed)))
   
-(defn oauth-token-manager
-  "App to manage OAuth token requests. Expects wrap-oauth to be applied already. 
-  Generates the following routes:
-    /oauth/request_token
-    /oauth/access_token
-    /oauth/authorize
-  "
+(defn- bare-token-manager
   [handler store]
   (fn [request]
     (condp = (:uri request)
@@ -126,3 +120,14 @@
         "/oauth/access_token"
           (access-token store request)
         (handler request))))
+        
+(defn oauth-token-manager
+  "App to manage OAuth token requests. Expects oauth-filter to be applied already. 
+  Generates the following routes:
+    /oauth/request_token
+    /oauth/access_token
+    /oauth/authorize
+  "
+  [handler store]
+  (oauth-filter (bare-token-manager handler store ) store store/get-request-token)
+)
