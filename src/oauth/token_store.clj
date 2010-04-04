@@ -27,9 +27,11 @@
   (fn [c _] c))
 
 ;; Authorizes a request token. 
+;; The 3 required parameters are store, request token (not the map) and a user. 
+;; Note we don't care at the moment what a user is. It could be a user name, user id, a user object etc.
 (defmulti authorize-token 
   "Revokes a request-token"
-  (fn [c _] c))
+  (fn [c _ _] c))
 
 ;; Revokes a request token. Implementations can chose to simply delete record. 
 ;; However once this is called it should no longer be returned by get-request-token
@@ -76,13 +78,13 @@
 
 (defn new-access-token
   "Creates but doesn't store an access token"
-  ([consumer ] (new-access-token consumer {}))
-  ([consumer params] (assoc params :token (rand-str 20) :secret (rand-str 40) :consumer consumer )))
+  ([consumer user ] (new-access-token consumer user {}))
+  ([consumer user params] (assoc params :token (rand-str 20) :secret (rand-str 40) :consumer consumer :user user)))
 
 (defn create-access-token 
   "Creates and stores an access token"
-  ([store consumer] (create-access-token store consumer {}))
-  ([store consumer params] (store-access-token store (new-access-token consumer params))))
+  ([store consumer user] (create-access-token store consumer user {}))
+  ([store consumer user params] (store-access-token store (new-access-token consumer user params))))
 
 ;; Local in memory implementation
 (def memory-consumers (atom {}))
@@ -106,9 +108,9 @@
   ((swap! memory-request-tokens assoc (token :token) token) (token :token)))
 
 (defmethod authorize-token :memory
-  [_ token]
+  [_ token user]
   (let [rt (@memory-request-tokens token)]
-    (swap! memory-request-tokens assoc token (assoc rt :authorized true))))
+    (swap! memory-request-tokens assoc token (assoc rt :authorized true :user user))))
   
 (defmethod revoke-request-token :memory
   [_ token]

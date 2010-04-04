@@ -106,7 +106,7 @@
         (contains? (request :oauth-params) :oauth_verifier)
         (= ((request :oauth-params) :oauth_verifier) ((request :oauth-token) :verifier))
         )
-    (let [token (store/create-access-token store (request :oauth-consumer) )]
+    (let [token (store/create-access-token store (request :oauth-consumer) ((request :oauth-token) :user) )]
       (token-response {:oauth_token (token :token) :oauth_secret (token :secret)})      
       )
     (not-allowed)))

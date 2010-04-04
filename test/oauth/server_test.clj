@@ -191,7 +191,7 @@
     (is (= 401 ((os/access-token :memory { :oauth-consumer consumer :oauth-token request-token :oauth-params {:oauth_verifier (request-token :verifier)}}) :status)))
     (is (= 401 ((os/access-token :memory { :oauth-consumer consumer :oauth-token request-token :oauth-params {:oauth_verifier (request-token :verifier)}}) :status)))
     (do
-      (store/authorize-token :memory (request-token :token))
+      (store/authorize-token :memory (request-token :token) "bob")
       (let [request-token (store/get-request-token :memory (request-token :token))]
         (is (= 401 ((os/access-token :memory { :oauth-consumer consumer :oauth-token request-token :oauth-params {} }) :status)))
         (is (= 401 ((os/access-token :memory { :oauth-consumer consumer :oauth-token request-token :oauth-params {:oauth_verifier "fake"}}) :status)))
@@ -206,6 +206,7 @@
             (is (not (nil? token)))
             (is (= (token :token) (token-params :oauth_token)))
             (is (= (token :secret) (token-params :oauth_secret)))
+            (is (= (token :user) "bob"))
             (is (= (token :consumer) consumer))))))))
   
 (deftest
@@ -213,7 +214,7 @@
   integrated-access-token-request
   (let [oauth-app (os/oauth-filter (os/oauth-token-manager app :memory ) :memory) 
         consumer  (store/store-consumer :memory {:key "dpf43f3p2l4k3l03" :secret "kd94hf93k423kf44"})
-        request-token  (store/store-request-token :memory {:token "hh5s93j4hdidpola" :secret "hdhd0244k9j7ao03" :verifier "hfdp7dh39dks9884" :consumer consumer :authorized true})]
+        request-token  (store/store-request-token :memory {:token "hh5s93j4hdidpola" :secret "hdhd0244k9j7ao03" :verifier "hfdp7dh39dks9884" :consumer consumer :authorized true :user "bob"})]
     (is (= 401 ((oauth-app {}) :status)))
     (is (= 401 ((oauth-app {:headers { :authorize "Basic realm=\"Secure Area\""}}) :status)))
     (is (= 401 ((oauth-app {:headers { :authorize "OAuth realm=\"https://photos.example.net/\", oauth_consumer_key=\"dpf43f3p2l4k3l03\", oauth_token=\"hh5s93j4hdidpola\", oauth_signature_method=\"PLAINTEXT\", oauth_signature=\"fake\", oauth_timestamp=\"1191242092\", oauth_nonce=\"dji430splmx33448\", oauth_verifier=\"hfdp7dh39dks9884\" oauth_version=\"1.0\""}}) :status)))
@@ -233,6 +234,7 @@
       (is (not (nil? (token-params :oauth_secret))))
       (let [token (store/get-access-token :memory (token-params :oauth_token))]
         (is (not (nil? token)))
+        (is (= (token :user) "bob"))
         (is (= (token :token) (token-params :oauth_token)))
         (is (= (token :secret) (token-params :oauth_secret)))
         (is (= (token :consumer) consumer))))))

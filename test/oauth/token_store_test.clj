@@ -56,9 +56,10 @@
     authorize-request-token
     (let [token (store/create-request-token :memory "consumer" "http://blabla.com") ]
       (do
-        (store/authorize-token :memory (token :token))
+        (store/authorize-token :memory (token :token) "bob")
         (let [authorized (store/get-request-token :memory (token :token))]
           (is (authorized :authorized))
+          (is (authorized :user) "bob")
           (is (= (token :token) (authorized :token)))
           (is (= (token :secret) (authorized :secret)))))))
 
@@ -103,18 +104,20 @@
   (deftest
     #^{:doc "Create but don't store an access token"}
     new-access-token
-    (let [token (store/new-access-token "consumer")]
+    (let [token (store/new-access-token "consumer" "bob")]
       (is (not (nil? (token :token))))
       (is (not (nil? (token :secret))))
+      (is (= (token :user) "bob"))
       (is (= (token :consumer "consumer")))))
 
   (deftest
     #^{:doc "Create and store an access token"}
     create-access-token
-    (let [token (store/create-access-token :memory "consumer")]
+    (let [token (store/create-access-token :memory "consumer" "bob")]
       (is (not (nil? (token :token))))
       (is (not (nil? (token :secret))))
       (is (= (token :consumer "consumer")))
+      (is (= (token :user) "bob"))
       (is (= (store/get-access-token :memory (token :token)) token))))
   
   (deftest  
