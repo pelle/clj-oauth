@@ -3,5 +3,6 @@
   :dependencies [[org.clojure/clojure "1.1.0"]
                 [org.clojure/clojure-contrib "1.1.0"]
                 [com.twinql.clojure/clj-apache-http "1.1.0"]
+                [ring/ring-core "0.2.0"]
                 ]
 )

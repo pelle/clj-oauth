@@ -238,4 +238,27 @@
         (is (= (token :token) (token-params :oauth_token)))
         (is (= (token :secret) (token-params :oauth_secret)))
         (is (= (token :consumer) consumer))))))
-  
+        
+(deftest
+  #^{:doc "Authorize Request Token"}
+  authorize-token
+  (let [consumer (store/create-consumer :memory)
+        request-token (store/create-request-token :memory consumer "http://test.com/callback")]
+    (is (= 401 ((os/authorize-token :memory {} ) :status)))
+    (is (= 401 ((os/authorize-token :memory {:params {:oauth_token (request-token :token)}} ) :status)))
+    (is (= 404 ((os/authorize-token :memory {:params {:oauth_token "fake"} :current-user "bob"} ) :status)))
+    
+    (let [response (os/authorize-token :memory {:params {:oauth_token (request-token :token)} :current-user "bob"})]
+      (is (= 302 (response :status)))
+      (is (= (str "http://test.com/callback?oauth_token=" (request-token :token) "&oauth_verifier=" (request-token :verifier)) 
+             ((response :headers) "Location")))
+      (let [authorized (store/get-request-token :memory (request-token :token))]
+        (is (authorized :authorized))
+        (is (authorized :user) "bob")
+        (is (= (request-token :token) (authorized :token)))
+        (is (= (request-token :secret) (authorized :secret)))))
+    ;; token has already been authorized by other user
+    (do
+      (store/authorize-token :memory (request-token :token) "jane")    
+      (is (= 401 ((os/authorize-token :memory {:params {:oauth_token (request-token :token)} :current-user "bob"}) :status)))
+      (is (= 302 ((os/authorize-token :memory {:params {:oauth_token (request-token :token)} :current-user "jane"}) :status))))))

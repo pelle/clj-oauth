@@ -7,7 +7,8 @@
             [oauth.token-store :as store])
   (:use [clojure.contrib.str-utils :only [str-join re-split]]
         [clojure.contrib.str-utils2 :only [upper-case]]
-        [clojure.contrib.java-utils :only [as-str]]))
+        [clojure.contrib.java-utils :only [as-str]]
+        [ring.util.response]))
 
 
 (defn parse-oauth-header 
@@ -110,6 +111,27 @@
       (token-response {:oauth_token (token :token) :oauth_secret (token :secret)})      
       )
     (not-allowed)))
+
+
+(defn authorize-token
+  "Authorizes a token "
+  [store request]
+  (if (and
+        (contains? request :current-user)
+        (contains? request :params)
+        (contains? (request :params) :oauth_token))
+    ( let [token (store/get-request-token store ((request :params) :oauth_token))]
+      (if token
+        (if (and (contains? token :user) (not (= (token :user) (request :current-user)))) ; We don't want to allow reauthorization if token is already linked to user
+          (not-allowed)
+          (do
+            (store/authorize-token store (token :token) (request :current-user))
+            (redirect (str (token :callback_url) "?" (sig/url-form-encode {:oauth_token (token :token) :oauth_verifier (token :verifier)})))))
+        { :status 404
+          :header {}
+          :body nil})
+      )
+    (not-allowed)))
   
 (defn- bare-token-manager
   [handler store]
@@ -119,6 +141,8 @@
           (request-token store request)
         "/oauth/access_token"
           (access-token store request)
+        "/oauth/authorize"
+          (authorize-token store request)
         (handler request))))
         
 (defn oauth-token-manager
